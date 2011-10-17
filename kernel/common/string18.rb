@@ -2,7 +2,7 @@ class String
   include Enumerable
 
   alias_method :each, :each_line
-  
+
   # Treats leading characters from <i>self</i> as a string of hexadecimal digits
   # (with an optional sign and an optional <code>0x</code>) and returns the
   # corresponding number. Zero is returned on error.
@@ -47,7 +47,7 @@ class String
     @data.reverse(0, @num_bytes)
     self
   end
-  
+
   # Deletes the specified portion from <i>self</i>, and returns the portion
   # deleted. The forms that take a <code>Fixnum</code> will raise an
   # <code>IndexError</code> if the value is out of range; the <code>Range</code>
@@ -544,4 +544,27 @@ class String
   # Returns a new string with the characters from <i>self</i> in reverse order.
   #
   #   "stressed".reverse   #=> "desserts"
+
+  # Append --- Concatenates the given object to <i>self</i>. If the object is a
+  # <code>Fixnum</code> between 0 and 255, it is converted to a character before
+  # concatenation.
+  #
+  #   a = "hello "
+  #   a << "world"   #=> "hello world"
+  #   a.concat(33)   #=> "hello world!"
+  def <<(other)
+    modify!
+
+    unless other.kind_of? String
+      if other.kind_of?(Integer) && other >= 0 && other <= 255
+        other = other.chr
+      else
+        other = StringValue(other)
+      end
+    end
+
+    taint if other.tainted?
+    append(other)
+  end
+  alias_method :concat, :<<
 end

@@ -16,7 +16,7 @@ class String
     # TODO
     self
   end
-  
+
   def hex
     return 0 if self.chars.first == "_"
     to_inum(16, false)
@@ -164,7 +164,7 @@ class String
 
     return self
   end
-  
+
   # Deletes the specified portion from <i>self</i>, and returns the portion
   # deleted. The forms that take a <code>Fixnum</code> will raise an
   # <code>IndexError</code> if the value is out of range; the <code>Range</code>
@@ -271,14 +271,14 @@ class String
 
   alias_method :next, :succ
   alias_method :next!, :succ!
-  
+
   def to_r
     return Rational(0,1) if empty?
-    
+
     clean       = strip
     numerator   = clean.gsub(".", "").to_i
     denominator = 1
-    
+
     if clean.match(/\d\.\d/)
       denominator = 10**clean.split(".")[1].to_i.to_s.length
     end
@@ -286,7 +286,7 @@ class String
     if clean.match(/\d\/\d/)
       denominator *= clean.split("/")[1].to_i
     end
-    
+
     return Rational(numerator, denominator)
   end
 
@@ -605,4 +605,42 @@ class String
   # Returns a new string with the characters from <i>self</i> in reverse order.
   #
   #   "stressed".reverse   #=> "desserts"
+
+  # Append --- Concatenates the given object to <i>self</i>. If the object is a
+  # <code>Fixnum</code> between 0 and 255, it is converted to a character before
+  # concatenation.
+  #
+  #   a = "hello "
+  #   a << "world"   #=> "hello world"
+  #   a.concat(33)   #=> "hello world!"
+  def <<(other)
+    modify!
+
+    unless other.kind_of? String
+      if other.kind_of?(Integer) && other >= 0 && other <= 255
+        other = other.chr
+      elsif other.kind_of?(Integer) && other < 0
+        raise RangeError, "negative argument"
+      else
+        other = StringValue(other)
+      end
+    end
+
+    taint if other.tainted?
+    append(other)
+  end
+  alias_method :concat, :<<
+
+  # Returns a one-character string at the beginning of the string.
+  #
+  #   a = "abcde"
+  #   a.chr    #=> "a"
+  def chr
+    if empty?
+      self
+    else
+      self[0]
+    end
+  end
+
 end

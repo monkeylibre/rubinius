@@ -297,8 +297,8 @@ module Enumerable
   # Enumerable#cycle saves elements in an internal array so changes to enum after the first pass have no effect.
   #
   #   a = ["a", "b", "c"]
-  #   a.cycle {|x| puts x }  # prints a, b, c, a, b, c,.. forever.
-  #   a.cycle(2) {|x| puts x }  # prints a, b, c, a, b, c.
+  #   a.cycle { |x| puts x }  # prints a, b, c, a, b, c,.. forever.
+  #   a.cycle(2) { |x| puts x }  # prints a, b, c, a, b, c.
 
   def cycle(many=nil)
     return to_enum(:cycle, many) unless block_given?
@@ -351,7 +351,7 @@ module Enumerable
 
   ##
   # :call-seq:
-  #   enum.drop_while {|obj| block } => array
+  #   enum.drop_while { |obj| block } => array
   #
   # Drops elements up to, but not including, the first element for which the block
   # returns nil or false and returns an array containing the remaining elements.
@@ -400,32 +400,6 @@ module Enumerable
 
     yield a unless a.empty?
     nil
-  end
-
-  ##
-  # :call-seq:
-  #   enum.each_with_index { |obj, i| block }  -> enum or enumerator
-  #
-  # Calls +block+ with two arguments, the item and its index, for
-  # each item in +enum+.
-  #
-  #   hash = {}
-  #   %w[cat dog wombat].each_with_index { |item, index|
-  #     hash[item] = index
-  #   }
-  #
-  #   p hash   #=> {"cat"=>0, "wombat"=>2, "dog"=>1}
-
-  def each_with_index
-    return to_enum(:each_with_index) unless block_given?
-
-    idx = 0
-    each do |o|
-      yield o, idx
-      idx += 1
-    end
-
-    self
   end
 
   ##
@@ -479,7 +453,7 @@ module Enumerable
   ##
   # :call-seq:
   #   enum.find_index(value) => int
-  #   enum.find_index{|elem| block } => int
+  #   enum.find_index{ |elem| block } => int
   #   enum.find_index => enumerator
   #
   # Compares each entry in enum with value or passes to block.
@@ -675,7 +649,7 @@ module Enumerable
   end
 
   def self.sort_proc
-    @sort_proc ||= Proc.new do |a,b|
+    @sort_proc ||= Proc.new do |a, b|
       unless ret = a <=> b
         raise ArgumentError, "Improper spaceship value"
       end
