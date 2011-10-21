@@ -10,3 +10,4 @@ class Float
     true
   end
 end
+
