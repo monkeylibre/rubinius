@@ -275,21 +275,7 @@ class String
   alias_method :next!, :succ!
 
   def to_r
-    return Rational(0,1) if empty?
-
-    clean       = strip
-    numerator   = clean.gsub(".", "").to_i
-    denominator = 1
-
-    if clean.match(/\d\.\d/)
-      denominator = 10**clean.split(".")[1].to_i.to_s.length
-    end
-
-    if clean.match(/\d\/\d/)
-      denominator *= clean.split("/")[1].to_i
-    end
-
-    return Rational(numerator, denominator)
+    Rationalizer.new(self).convert
   end
 
   ##
@@ -619,10 +605,12 @@ class String
     modify!
 
     unless other.kind_of? String
-      if other.kind_of?(Integer) && other >= 0 && other <= 255
-        other = other.chr
-      elsif other.kind_of?(Integer) && other < 0
-        raise RangeError, "negative argument"
+      if other.kind_of? Integer
+        if other >= 0 and other <= 255
+          other = other.chr
+        else
+          raise RangeError, "negative value for character"
+        end
       else
         other = StringValue(other)
       end
