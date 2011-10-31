@@ -28,6 +28,7 @@
 #include "global_cache.hpp"
 
 #include "vm/object_utils.hpp"
+#include "on_stack.hpp"
 
 #include "configuration.hpp"
 
@@ -57,17 +58,24 @@ namespace rubinius {
     return other->copy_object(state, this);
   }
 
-  Object* Object::copy_singleton_class(STATE, Object* other) {
+  Object* Object::copy_singleton_class(STATE, GCToken gct, Object* other) {
     if(SingletonClass* sc = try_as<SingletonClass>(other->klass())) {
-      MethodTable* source_methods = sc->method_table()->duplicate(state);
-      LookupTable* source_constants = sc->constant_table()->duplicate(state);
+      MethodTable* source_methods = 0;
+      LookupTable* source_constants = 0;
+      Object* self = this;
 
-      singleton_class(state)->method_table(state, source_methods);
-      singleton_class(state)->constant_table(state, source_constants);
+      OnStack<4> os(state, self, sc, source_methods, source_constants);
+
+      source_methods = sc->method_table()->duplicate(state, gct);
+      source_constants = sc->constant_table()->duplicate(state);
+
+      self->singleton_class(state)->method_table(state, source_methods);
+      self->singleton_class(state)->constant_table(state, source_constants);
       // TODO inc the global serial here?
 
       // This allows us to preserve included modules
-      singleton_class(state)->superclass(state, sc->superclass());
+      self->singleton_class(state)->superclass(state, sc->superclass());
+      return self;
     }
 
     return this;
@@ -156,7 +164,7 @@ namespace rubinius {
     return Qfalse;
   }
   
-  void Object::check_forzen(STATE) {
+  void Object::check_frozen(STATE) {
     if(frozen_p(state) == Qtrue) {
       Exception::runtime_error(state, "can't modify frozen object");
     }
@@ -721,7 +729,7 @@ namespace rubinius {
 
   Object* Object::trust(STATE) {
     if(untrusted_p(state) == Qtrue) {
-      check_forzen(state);
+      check_frozen(state);
       if(reference_p()) set_untrusted(0);
     }
     return this;
@@ -729,7 +737,7 @@ namespace rubinius {
 
   Object* Object::untrust(STATE) {
     if(untrusted_p(state) == Qfalse) {
-      check_forzen(state);
+      check_frozen(state);
       if(reference_p()) set_untrusted();
     }
     return this;
