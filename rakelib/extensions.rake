@@ -51,6 +51,8 @@ def build_extconf(name, opts)
     ENV["CFLAGS"]      = "-I#{include18_dir} -I#{include19_dir}"
   end
 
+  ENV["RBXOPT"] = opts[:env] if opts.key? :env
+
   unless opts[:deps] and opts[:deps].all? { |n| File.exists? n }
     sh("#{rbx_build} extconf.rb #{redirect}", &fail_block)
   end
@@ -109,7 +111,6 @@ File.open(build_ruby, "wb") do |f|
 end
 
 compile_ext "bigdecimal"
-compile_ext "readline" if BUILD_CONFIG[:defines].include? "HAS_READLINE"
 compile_ext "digest"
 compile_ext "digest:md5"
 compile_ext "digest:rmd160"
@@ -120,6 +121,13 @@ compile_ext "syck"
 compile_ext "melbourne", :task => "rbx", :doc => "for Rubinius"
 compile_ext "melbourne", :task => "build", :doc => "for bootstrapping"
 compile_ext "nkf"
+
+if BUILD_CONFIG[:defines].include? "HAS_READLINE"
+  compile_ext "readline", :dir => "lib/18/readline/ext"
+  compile_ext "readline", :dir => "lib/19/readline/ext",
+                          :deps => ["Makefile", "extconf.rb"],
+                          :env => "-X19"
+end
 
 # rbx must be able to run to build these because they use
 # extconf.rb, so they must be after melbourne for Rubinius.
