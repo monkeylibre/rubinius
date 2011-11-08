@@ -156,44 +156,38 @@ class Complex < Numeric
   #
   # Multiplication with real or complex number.
   #
-  def * (other)
+  def *(other)
     if other.kind_of?(Complex)
-      re = @real*other.real - @imag*other.imag
-      im = @real*other.imag + @imag*other.real
-      Complex(re, im)
-    elsif Complex.generic?(other)
-      Complex(@real * other, @imag * other)
+      Complex(real * other.real - imag * other.imag,
+              real * other.imag + imag * other.real)
+    elsif other.kind_of?(Numeric) && other.real?
+      Complex(real * other, imag * other)
     else
-      x , y = other.coerce(self)
-      x * y
+      redo_coerced(:*, other)
     end
   end
 
   #
   # Division by real or complex number.
   #
-  def divide (other)
+  def divide(other)
     if other.kind_of?(Complex)
-      self*other.conjugate/other.abs2
-    elsif Complex.generic?(other)
-      Complex(@real/other, @imag/other)
+      self * other.conjugate / other.abs2
+    elsif other.kind_of?(Numeric) && other.real?
+      Complex(real.quo(other), imag.quo(other))
     else
-      x, y = other.coerce(self)
-      x/y
+      redo_coerced(:quo, other)
     end
   end
 
   alias_method :/, :divide
-
-  def quo(other)
-    Complex(@real.quo(1), @imag.quo(1)) / other
-  end
+  alias_method :quo, :divide
 
   #
   # Raise this complex number to the given (real or complex) power.
   #
   def ** (other)
-    if other == 0
+    if !other.kind_of?(Float) && other == 0
       return Complex(1)
     end
     if other.kind_of?(Complex)
@@ -285,6 +279,13 @@ class Complex < Numeric
     else
       other == self
     end
+  end
+
+  def eql?(other)
+    other.kind_of?(Complex) and
+    imag.class == other.imag.class and
+    real.class == other.real.class and
+    self == other
   end
 
   #

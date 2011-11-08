@@ -58,6 +58,8 @@ def build_extconf(name, opts)
   end
 
   sh("make #{redirect}", &fail_block)
+
+  ENV.delete("RBXOPT")
 end
 
 def compile_ext(name, opts={})
@@ -122,7 +124,7 @@ compile_ext "melbourne", :task => "rbx", :doc => "for Rubinius"
 compile_ext "melbourne", :task => "build", :doc => "for bootstrapping"
 compile_ext "nkf"
 
-if BUILD_CONFIG[:defines].include? "HAS_READLINE"
+if BUILD_CONFIG[:readline] == :c_readline
   compile_ext "readline", :dir => "lib/18/readline/ext"
   compile_ext "readline", :dir => "lib/19/readline/ext",
                           :deps => ["Makefile", "extconf.rb"],
